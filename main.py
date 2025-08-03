@@ -40,16 +40,19 @@ class MyBot(discord.Client):
         MAX_LEN = 2000
 
         async def responder_billu(msg):
-            await message.channel.typing()
-            print("fazendo aquisição na LLM")
-            resposta = await loop.run_in_executor(None, enviar_para_gemini, msg.content, str(msg.author))
-            resposta = substituir_emojis_custom(resposta)
-            print("resposta pronta")
-            
-            if len(resposta) > MAX_LEN:
-                resposta = resposta[:MAX_LEN - 20] + "\n..."
-            
-            await msg.channel.send(resposta)
+            try:
+                await message.channel.typing()
+                print("fazendo aquisição na LLM")
+                resposta = await loop.run_in_executor(None, enviar_para_gemini, msg.content, str(msg.author))
+                resposta = substituir_emojis_custom(resposta)
+                print("resposta pronta")
+                
+                if len(resposta) > MAX_LEN:
+                    resposta = resposta[:MAX_LEN - 20] + "\n..."
+                
+                await msg.channel.send(resposta)
+            except Exception as e:
+                print(f"[ERRO] Falha ao responder: {e}")
 
         # -- chat fodaci: resposta automatica sem pré-requisito
         if message.channel.id in chat_fodaci:
@@ -86,8 +89,17 @@ class MyBot(discord.Client):
             status=discord.Status.idle,  # online, idle, dnd, invisible
             activity=atividade
         )
+
+async def watchdog(bot):
+    while True:
+        await asyncio.sleep(60)
+        if bot.is_closed():
+            print("[!!] bot aparentemente caiu, reiniciando...")
+            os._exit(1)
     
 
 bot = MyBot()
+
+asyncio.ensure_future(watchdog(bot))
 
 bot.run(token)

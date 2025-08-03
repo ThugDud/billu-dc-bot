@@ -87,7 +87,7 @@ def enviar_para_gemini(mensagem: str, autor: str = "Anônimo") -> str:
     for tentativa in range(tentativas):
         try:
             print(f"LLM: Tentativa n {tentativa}")
-            r = requests.post(URL, headers=HEADERS, json=payload, timeout=10)
+            r = requests.post(URL, headers=HEADERS, json=payload, timeout=(5,25))
             r.raise_for_status()
             data = r.json()
             resposta = data["candidates"][0]["content"]["parts"][0]["text"].strip()
