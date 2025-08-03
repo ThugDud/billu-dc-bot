@@ -63,7 +63,7 @@ class MyBot(discord.Client):
             await responder_billu(message)
 
         # --- modo 2: chat_spam -> responde automaticamente após 10 mensagens
-        if message.channel.id in chat_spam:
+        elif message.channel.id in chat_spam:
             contador = contador_por_chat.get(message.channel.id, 0) + 1
             contador_por_chat[message.channel.id] = contador
             print(f"[DEBUG] Contador SPAM do canal {message.channel.name} (ID: {message.channel.id}): {contador}")
@@ -100,6 +100,9 @@ async def watchdog(bot):
 
 bot = MyBot()
 
-asyncio.ensure_future(watchdog(bot))
+async def main():
+    bot = MyBot()
+    asyncio.create_task(watchdog(bot))  # <-- safe e bonito
+    await bot.start(token)
 
-bot.run(token)
+asyncio.run(main())
