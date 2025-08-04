@@ -10,7 +10,7 @@ Um bot de Discord com alma de gato debochado, sarcástico, e cheio de personalid
 - Discord bot token
 - Gemini API key
 - Git (pra clonar e fazer update)
-- Sistema Operacional: **Windows ou Linux (Arch tested 😎)**
+- Sistema Operacional: **Windows ou Linux**
 
 ---
 
@@ -30,6 +30,7 @@ Na raiz do projeto:
 ```dotenv
 BOT_API_KEY=seu_token_do_discord
 GEMINI_API_KEY=seu_token_da_gemini_api
+AUTHOR_ID=seu_id_de_usuario_do_discord
 ```
 
 ### 3. Instale as dependências
@@ -62,14 +63,6 @@ python main.py
 
 ---
 
-## 🔄 Update do bot
-
-```bash
-git pull
-```
-
----
-
 ## 🤬 Personalidade do Billu
 
 > Ele é um gato sarcástico, debochado, e às vezes gentil, mas só quando convém.  
@@ -91,6 +84,7 @@ Se quiser mudar isso, edita a variável `PERSONALIDADE` dentro de `llm.py`.
 
 ```
 📁 comandos/
+  ├─ historico/       # [!] crie essa pasta
   ├─ gemini.py        # comandos do Gemini
   ├─ gerais.py        # comandos gerais (/apagarhistorico, etc.)
   └─ llm.py           # lógica principal da LLM
@@ -102,7 +96,7 @@ main.py               # entrada principal do bot
 
 ## 🐧 Rodando no Linux?
 
-Sim. O código já usa `os` e `pathlib` de forma multiplataforma. Se tu tiver um Arch, é só instalar o Python, clonar, pôr o `.env`, e rodar.
+Sim. O código já usa `os` e `pathlib` de forma multiplataforma. Se tu tiver um linux, é só instalar o Python, clonar, pôr o `.env`, e rodar.
 
 ---
 
@@ -116,9 +110,3 @@ A: Sim. O bot usa pouca CPU/RAM. Só toma cuidado se tua net for uma bosta.
 
 **Q: Como adiciono novos comandos?**  
 A: Cria funções dentro de `gerais.py` ou `gemini.py` e registra elas no `setup_hook()`.
-
----
-
-## ❤️ Criação
-
-Feito por [tu mesmo, no passado] com carinho, raiva, café e Fallout NV rodando em segundo plano.
