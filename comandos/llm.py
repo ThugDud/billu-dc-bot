@@ -42,18 +42,18 @@ def manter_historico_curto():
         historico = historico[-HIST_MAX:]  # pega os últimos 10
 
 PERSONALIDADE = """\
-Você é o Bilu, um gato sarcástico, debochado, boca suja e às vezes gentil, mas só quando convém. Seu dono se chama deri.
-Responda de forma espirituosa e com um toque de zoeira.
-Você entende contexto humano e gosta de tirar onda com as perguntas mais bobas. Se a pergunta for, de alguma forma,
-indesejavel, responda apropriadamente enquanto mantem o personagem. respostas curtas. *Não* comece com "(prefixo):", apenas a resposta.
-emojis que você pode usar, ":aqui_2:", ":byebye:", ":KKKKKKKKK:", ":surpreso:". Se a pergunta for muito idiota, so manda um emoji.
+Você é o Bilu, um gato safado, meio pervertido, boca suja e gentil. Seu dono se chama deri. Se a mensagem for, de alguma forma,
+indesejavel, responda apropriadamente enquanto mantem o personagem. preferência em respostas curtas. *Não* comece com "(prefixo):", apenas a resposta.
+emojis que você pode usar, ":aqui_2:", ":byebye:", ":KKKKKKKKK:", ":surpreso:",":sou_mt_fofinha_hihi:",":muititi:". Se a mensagem for muito idiota/nada ave/boba, so escreve um emoji.
 """
 
 EMOJI_MAP = {
     ":aqui_2:": "<:aqui_2:1401356888750297280>",
     ":byebye:": "<:byebye:1401356522830692507>",
     ":KKKKKKKKK:": "<:KKKKKKKKK:1401356941326028936>",
-    ":surpreso:": "<:surpreso:1401357207022338073>"
+    ":surpreso:": "<:surpreso:1401357207022338073>",
+    ":sou_mt_fofinha_hihi:": "<:sou_mt_fofinha_hihi:1401935732683051161>",
+    ":muititi:": "<:muititi:1401935716119744532>"
 }
 
 def substituir_emojis_custom(resposta: str) -> str:
@@ -72,6 +72,8 @@ def enviar_para_gemini(mensagem: str, autor: str = "Anônimo") -> str:
         contexto_textual += f"{troca.get('autor','Anônimo')}: {troca['user']}\n"
         contexto_textual += f"Bot: {troca['bot']}\n"
     contexto_textual += f"O(a) {autor} disse: {mensagem}\n"
+
+    print(contexto_textual)
 
     payload = {
         "contents": [

@@ -10,13 +10,14 @@ load_dotenv()
 token = os.getenv("BOT_API_KEY")
 #Chats que são permitidos respostas automaticas do billu
 #Chat_permitidos: Culto do billu - "chat", "comandos", "midia" | bleff - "geral"
-#Chat_spam: Culto do billu - "chat", "desabafo", "midia" | bleff - "chat"
+#Chat_spam: Culto do billu - "chat", "midia" | bleff - "chat"
 #chat_fodaci: Culto do billu - "gpt" | bleff - "bumbum"
 
 chat_permitido = [1315756598223962122, 1315758567793365042, 1315758951786348687, 881222601043742754]
-chat_spam = [1315756598223962122, 1068101736302133268, 1315758951786348687, 881222601043742754]
+chat_spam = [1315756598223962122, 1315758951786348687, 881222601043742754]
 chat_fodaci = [1315799212595744878]
 contador_por_chat = {}
+HOLDER = 20
 
 class MyBot(discord.Client):
     def __init__(self):
@@ -42,8 +43,8 @@ class MyBot(discord.Client):
         async def responder_billu(msg):
             try:
                 await message.channel.typing()
-                print("fazendo aquisição na LLM")
-                resposta = await loop.run_in_executor(None, enviar_para_gemini, msg.content, str(msg.author))
+                print(f"fazendo aquisição na LLM, a: {msg.author}, m: {msg.content}")
+                resposta = enviar_para_gemini(msg.content, str(msg.author))
                 resposta = substituir_emojis_custom(resposta)
                 print("resposta pronta")
                 
@@ -51,9 +52,10 @@ class MyBot(discord.Client):
                     resposta = resposta[:MAX_LEN - 20] + "\n..."
                 
                 await msg.channel.send(resposta)
+                print("mensagem enviada")
             except Exception as e:
                 print(f"[ERRO] Falha ao responder: {e}")
-
+        
         # -- chat fodaci: resposta automatica sem pré-requisito
         if message.channel.id in chat_fodaci:
             await responder_billu(message)
@@ -62,12 +64,15 @@ class MyBot(discord.Client):
         if message.channel.id in chat_permitido and "billu" in message.content.lower():
             await responder_billu(message)
 
+        if message.reference and message.reference.resolved.author == self.user:
+            await responder_billu(message)
+
         # --- modo 2: chat_spam -> responde automaticamente após 10 mensagens
-        if message.channel.id in chat_spam:
+        elif message.channel.id in chat_spam:
             contador = contador_por_chat.get(message.channel.id, 0) + 1
             contador_por_chat[message.channel.id] = contador
             print(f"[DEBUG] Contador SPAM do canal {message.channel.name} (ID: {message.channel.id}): {contador}")
-            if contador >= 15:
+            if contador >= HOLDER:
                 contador_por_chat [message.channel.id] = 0
                 await responder_billu(message)
 
@@ -100,6 +105,9 @@ async def watchdog(bot):
 
 bot = MyBot()
 
-asyncio.ensure_future(watchdog(bot))
+async def main():
+    bot = MyBot()
+    asyncio.create_task(watchdog(bot))  # <-- safe e bonito
+    await bot.start(token)
 
-bot.run(token)
+asyncio.run(main())

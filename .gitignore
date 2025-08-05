@@ -3,3 +3,4 @@ __pycache__/
 historico/
 *.pyc
 *.log
+*.md
