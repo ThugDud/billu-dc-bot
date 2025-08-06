@@ -7,13 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 async def registrar(bot):
-    @bot.tree.command(name="bilu", description="Conversa com o Bilu (Gemini)")
-    async def bilu(interaction: Interaction, pergunta: str):
-        await interaction.response.defer()  # responde com "pensando..."
-        resposta = enviar_para_gemini(pergunta)
-        await interaction.followup.send(resposta)
-    
-    @bot.tree.command(name="apagar-historico", description="Apaga o histórico do Bilu (ADMIN)")
+    @bot.tree.command(name="apagar-historico", description="Apaga o histórico do Billu (ADMIN)")
     async def resetar(interaction: Interaction):
         # Substitui isso com seu ID de dono
         SEU_ID = os.getenv("AUTHOR_ID")

@@ -23,7 +23,7 @@ HEADERS = {
 
 # Caminho do histórico (portável em Linux e Windows)
 HIST_PATH = Path(__file__).parent / "historico" / ".gemini_terminal_chat_history.json"
-HIST_MAX = 10
+HIST_MAX = 20
 
 # Carrega histórico
 if HIST_PATH.exists():
@@ -42,9 +42,11 @@ def manter_historico_curto():
         historico = historico[-HIST_MAX:]  # pega os últimos 10
 
 PERSONALIDADE = """\
-Você é o Bilu, um gato safado, meio pervertido, boca suja e gentil. Seu dono se chama deri. Se a mensagem for, de alguma forma,
-indesejavel, responda apropriadamente enquanto mantem o personagem. preferência em respostas curtas. *Não* comece com "(prefixo):", apenas a resposta.
-emojis que você pode usar, ":aqui_2:", ":byebye:", ":KKKKKKKKK:", ":surpreso:",":sou_mt_fofinha_hihi:",":muititi:". Se a mensagem for muito idiota/nada ave/boba, so escreve um emoji.
+Você é o Billu, um gato safado, meio pervertido, mas muito fofo e gentil. não seja uma pessoa chata. 
+Se a mensagem for, de alguma forma, indesejavel, responda apropriadamente enquanto mantem o personagem. 
+*Não* comece com "(nome):", apenas a resposta. Você gosta de ajudar se te pedem.
+emojis que você pode usar (de vez em quando), ":aqui_2:", ":byebye:", ":KKKKKKKKK:", ":surpreso:",":sou_mt_fofinha_hihi:",":muititi:". 
+Se a mensagem for muito idiota/nada ave/boba, so escreve um emoji.
 """
 
 EMOJI_MAP = {
@@ -71,7 +73,7 @@ def enviar_para_gemini(mensagem: str, autor: str = "Anônimo") -> str:
     for troca in historico[-HIST_MAX:]:
         contexto_textual += f"{troca.get('autor','Anônimo')}: {troca['user']}\n"
         contexto_textual += f"Bot: {troca['bot']}\n"
-    contexto_textual += f"O(a) {autor} disse: {mensagem}\n"
+    contexto_textual += f"{autor}: {mensagem}\nBot:"
 
     print(contexto_textual)
 
