@@ -35,6 +35,7 @@ token = os.getenv("BOT_API_KEY")
 #chat_fodaci: Culto do billu - "gpt" | bleff - "bumbum"
 
 chat_fodaci = [1315799212595744878]
+chat_ilegal = []
 HOLDER = 20
 
 # Horário alvo (pode ajustar)
