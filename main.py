@@ -4,6 +4,7 @@ import asyncio
 
 from discord import app_commands, Interaction
 from comandos import gerais, gemini
+from comandos.utils import log_erro
 from dotenv import load_dotenv
 from pathlib import Path
 
@@ -35,11 +36,11 @@ token = os.getenv("BOT_API_KEY")
 #chat_fodaci: Culto do billu - "gpt" | bleff - "bumbum"
 
 chat_fodaci = [1315799212595744878]
-chat_ilegal = []
+chat_ilegal = [1315774240787796048, 1396974089293398127, 1395813079887122584, 1395459917271404746, 1386791850001563648]
 HOLDER = 20
 
 # Horário alvo (pode ajustar)
-HORARIO_ALVO = "19:03"
+HORARIO_ALVO = "07:00"
 
 class MyBot(discord.Client):
     def __init__(self):
@@ -76,6 +77,7 @@ class MyBot(discord.Client):
                 await msg.channel.send(resposta)
                 print("mensagem enviada")
             except Exception as e:
+                log_erro(e, contexto="responder_billu()")
                 print(f"[ERRO] Falha ao responder ({type(e)}): {e}")
         
         if message.reference and message.reference.resolved.author == self.user:
@@ -119,10 +121,12 @@ class MyBot(discord.Client):
             activity=atividade
         )
 
-async def dailybillu():
+async def dailybillu(bot):
     canal = bot.get_channel(1315773798980784210)
 
     from comandos.llm import enviar_para_gemini, substituir_emojis_custom
+
+    MAX_LEN = 2000
 
     try:
         resposta = enviar_para_gemini("você agora vai fazer um tweet! escreva sobre algum topico/assunto/problema/fodase. Termine com hastags fodas. Não faça metalinguagem com esse texto.", "developer")
@@ -134,6 +138,7 @@ async def dailybillu():
         await canal.send(resposta)
         print("mensagem diaria enviada")
     except Exception as e:
+        log_erro(e, contexto="dailybillu()")
         print(f"[ERRO] Falha ao enviar mensagem diaria ({type(e)}): {e}")
 
 async def watchdog(bot):
@@ -143,7 +148,7 @@ async def watchdog(bot):
             print("[!!] bot aparentemente caiu, reiniciando...")
             os._exit(1)
     
-async def contador_diario():
+async def contador_diario(bot):
     ultimo_dia_executado = None
 
     while True:
@@ -152,16 +157,14 @@ async def contador_diario():
         dia_atual = agora.date()
 
         if hora_atual == HORARIO_ALVO and dia_atual != ultimo_dia_executado:
-            await dailybillu()
+            await dailybillu(bot)
             ultimo_dia_executado = dia_atual
         await asyncio.sleep(30)
-
-bot = MyBot()
 
 async def main():
     bot = MyBot()
     asyncio.create_task(watchdog(bot))  # <-- safe e bonito
-    asyncio.create_task(contador_diario()) # <-- eu acho que safe e bonito
+    asyncio.create_task(contador_diario(bot)) # <-- eu acho que safe e bonito
     await bot.start(token)
 
 asyncio.run(main())
