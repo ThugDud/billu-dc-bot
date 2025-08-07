@@ -84,7 +84,7 @@ Se quiser mudar isso, edita a variável `PERSONALIDADE` dentro de `llm.py`.
 
 ```
 📁 comandos/
-  ├─ historico/       # [!] crie essa pasta
+  ├─ historico/       # aqui vai os .json
   ├─ gemini.py        # comandos do Gemini
   ├─ gerais.py        # comandos gerais (/apagarhistorico, etc.)
   └─ llm.py           # lógica principal da LLM
