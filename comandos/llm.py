@@ -1,10 +1,10 @@
-# comandos/llm.py
+# comandos/llm.py (Corrigido)
 
 import os
 import requests
 import time
 from dotenv import load_dotenv
-import discord # Importamos discord para type hinting
+import discord
 
 # Inicializa .env
 load_dotenv()
@@ -14,7 +14,7 @@ API_KEY = os.getenv("GEMINI_API_KEY")
 if not API_KEY:
     raise RuntimeError("[ERRO] Defina GEMINI_API_KEY no .env ou variável de ambiente.")
 
-URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent" # Modelo atualizado para melhor performance
+URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
 HEADERS = {
     "Content-Type": "application/json",
     "X-goog-api-key": API_KEY
@@ -43,7 +43,13 @@ def substituir_emojis_custom(resposta: str) -> str:
         resposta = resposta.replace(nome, formato)
     return resposta
 
-#---------------------------------------------------------------------------------------------------------
+# --- NOVA FUNÇÃO PARA CORRIGIR O BUG ---
+def reverter_emojis_para_texto(texto: str) -> str:
+    """Converte emojis customizados do formato Discord de volta para o texto simples."""
+    for nome_texto, formato_discord in EMOJI_MAP.items():
+        texto = texto.replace(formato_discord, nome_texto)
+    return texto
+# ----------------------------------------
 
 async def enviar_para_gemini(mensagem_atual: discord.Message) -> str:
     """
@@ -51,24 +57,25 @@ async def enviar_para_gemini(mensagem_atual: discord.Message) -> str:
     """
     contexto_textual = PERSONALIDADE + "\n\nAqui está o histórico recente da conversa:\n"
 
-    # Pega as últimas 20 mensagens do canal. O 'limit' inclui a mensagem atual.
     try:
         historico_canal = [m async for m in mensagem_atual.channel.history(limit=20)]
-        historico_canal.reverse() # Inverte para a ordem cronológica (mais antigo para mais novo)
+        historico_canal.reverse() 
     except discord.errors.Forbidden:
         return "miau (não consigo ler o histórico desse canal, seu animal!)"
     except Exception as e:
         print(f"[ERRO] Falha ao buscar histórico do canal: {e}")
         return "miau (deu ruim pra ler o que aconteceu aqui)"
 
-
-    # Monta o histórico para o prompt
     for msg in historico_canal:
-        # Usa o display_name para pegar o apelido do servidor
         autor = msg.author.display_name
-        # Limpa a mensagem de menções e formatação do discord
-        conteudo = msg.clean_content
-        contexto_textual += f" - {autor}: {conteudo}\n"
+        conteudo_limpo = msg.clean_content
+        
+        # --- APLICAÇÃO DA CORREÇÃO ---
+        # Revertemos os emojis no histórico para o formato de texto
+        conteudo_processado = reverter_emojis_para_texto(conteudo_limpo)
+        # ---------------------------
+
+        contexto_textual += f" - {autor}: {conteudo_processado}\n"
 
     contexto_textual += "\nLembre-se, você é o Billu. Responda à última mensagem de forma natural, continuando a conversa."
     
@@ -84,8 +91,6 @@ async def enviar_para_gemini(mensagem_atual: discord.Message) -> str:
     for tentativa in range(tentativas):
         try:
             print(f"LLM: Tentativa n {tentativa + 1}")
-            # Usar 'async with' com uma biblioteca como aiohttp seria ideal,
-            # mas para manter a simplicidade, vamos continuar com requests, que é bloqueante.
             r = requests.post(URL, headers=HEADERS, json=payload, timeout=(5, 25))
             r.raise_for_status()
             data = r.json()
