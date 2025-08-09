@@ -1,13 +1,12 @@
-# gemini_core.py (atualizado pra rodar suave no Windows)
+# comandos/llm.py
 
 import os
-import json
 import requests
 import time
-from pathlib import Path
 from dotenv import load_dotenv
+import discord # Importamos discord para type hinting
 
-# Inicializa .env (pra rodar GEMINI_API_KEY no Windows sem set manual)
+# Inicializa .env
 load_dotenv()
 
 # Configs
@@ -15,38 +14,19 @@ API_KEY = os.getenv("GEMINI_API_KEY")
 if not API_KEY:
     raise RuntimeError("[ERRO] Defina GEMINI_API_KEY no .env ou variável de ambiente.")
 
-URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent" # Modelo atualizado para melhor performance
 HEADERS = {
     "Content-Type": "application/json",
     "X-goog-api-key": API_KEY
 }
 
-# Caminho do histórico (portável em Linux e Windows)
-HIST_PATH = Path(__file__).parent / "historico" / ".gemini_terminal_chat_history.json"
-HIST_MAX = 20
-
-# Carrega histórico
-if HIST_PATH.exists():
-    with open(HIST_PATH, "r", encoding="utf-8") as f:
-        historico = json.load(f)
-else:
-    historico = []
-
-def salvar_historico():
-    with open(HIST_PATH, "w", encoding="utf-8") as f:
-        json.dump(historico[-HIST_MAX:], f, indent=2, ensure_ascii=False)
-
-def manter_historico_curto():
-    global historico
-    if len(historico) > HIST_MAX:
-        historico = historico[-HIST_MAX:]  # pega os últimos 10
-
 PERSONALIDADE = """\
 Você é o Billu, um gato safado, meio pervertido, mas muito fofo e gentil. não seja uma pessoa chata. 
 Se a mensagem for, de alguma forma, indesejavel, responda apropriadamente enquanto mantem o personagem. 
-*Não* comece com "(nome):", apenas a resposta. Você gosta de ajudar se te pedem.
+*Não* comece com "Billu:" ou algo do tipo, apenas a resposta direta. Você gosta de ajudar se te pedem.
 emojis que você pode usar (de vez em quando), ":aqui_2:", ":byebye:", ":KKKKKKKKK:", ":surpreso:",":sou_mt_fofinha_hihi:",":muititi:". 
-Se a mensagem for muito idiota/nada ave/boba, so escreve um emoji.
+Se a mensagem for muito idiota/nada a ver/boba, so escreve um emoji.
+Seu objetivo é responder à ÚLTIMA mensagem no histórico, usando as mensagens anteriores como contexto.
 """
 
 EMOJI_MAP = {
@@ -63,62 +43,85 @@ def substituir_emojis_custom(resposta: str) -> str:
         resposta = resposta.replace(nome, formato)
     return resposta
 
-
 #---------------------------------------------------------------------------------------------------------
 
-def enviar_para_gemini(mensagem: str, autor: str = "Anônimo") -> str:
-    global historico
+async def enviar_para_gemini(mensagem_atual: discord.Message) -> str:
+    """
+    Gera uma resposta do Gemini usando o histórico do canal como contexto.
+    """
+    contexto_textual = PERSONALIDADE + "\n\nAqui está o histórico recente da conversa:\n"
 
-    contexto_textual = PERSONALIDADE + "\n"
-    for troca in historico[-HIST_MAX:]:
-        contexto_textual += f"{troca.get('autor','Anônimo')}: {troca['user']}\n"
-        contexto_textual += f"Bot: {troca['bot']}\n"
-    contexto_textual += f"{autor}: {mensagem}\nBot:"
+    # Pega as últimas 20 mensagens do canal. O 'limit' inclui a mensagem atual.
+    try:
+        historico_canal = [m async for m in mensagem_atual.channel.history(limit=20)]
+        historico_canal.reverse() # Inverte para a ordem cronológica (mais antigo para mais novo)
+    except discord.errors.Forbidden:
+        return "miau (não consigo ler o histórico desse canal, seu animal!)"
+    except Exception as e:
+        print(f"[ERRO] Falha ao buscar histórico do canal: {e}")
+        return "miau (deu ruim pra ler o que aconteceu aqui)"
 
+
+    # Monta o histórico para o prompt
+    for msg in historico_canal:
+        # Usa o display_name para pegar o apelido do servidor
+        autor = msg.author.display_name
+        # Limpa a mensagem de menções e formatação do discord
+        conteudo = msg.clean_content
+        contexto_textual += f" - {autor}: {conteudo}\n"
+
+    contexto_textual += "\nLembre-se, você é o Billu. Responda à última mensagem de forma natural, continuando a conversa."
+    
+    print("--- CONTEXTO ENVIADO PARA A LLM ---")
     print(contexto_textual)
+    print("-----------------------------------")
 
     payload = {
-        "contents": [
-            {
-                "parts": [
-                    {"text": contexto_textual}
-                ]
-            }
-        ]
+        "contents": [{"parts": [{"text": contexto_textual}]}]
     }
 
     tentativas = 3
     for tentativa in range(tentativas):
         try:
-            print(f"LLM: Tentativa n {tentativa}")
-            r = requests.post(URL, headers=HEADERS, json=payload, timeout=(5,25))
+            print(f"LLM: Tentativa n {tentativa + 1}")
+            # Usar 'async with' com uma biblioteca como aiohttp seria ideal,
+            # mas para manter a simplicidade, vamos continuar com requests, que é bloqueante.
+            r = requests.post(URL, headers=HEADERS, json=payload, timeout=(5, 25))
             r.raise_for_status()
             data = r.json()
             resposta = data["candidates"][0]["content"]["parts"][0]["text"].strip()
-            historico.append({
-                "autor": autor, 
-                "user": mensagem, 
-                "bot": resposta
-            })
-            manter_historico_curto()
-            salvar_historico()
             print("LLM: Resposta pronta")
             return resposta
         except requests.exceptions.RequestException as e:
             if e.response is not None and e.response.status_code == 503:
                 time.sleep(2)
                 continue
-            # quando ver um miau no chat = merda
             print(f"[ERRO] {str(e)}")
             return "miau"
 
     print("[ERRO] Tentativas esgotadas. Servidor indisponível.")
     return "miau"
 
-# Função pra apagar histórico
-def apagar_historico():
-    global historico
-    historico = []
-    if HIST_PATH.exists():
-        HIST_PATH.unlink()
-    return "[✓] Histórico apagado."
+
+async def gerar_tweet_billu(prompt: str) -> str:
+    """
+    Gera um texto mais genérico sem depender de um histórico de chat.
+    Ideal para a mensagem diária.
+    """
+    contexto_textual = PERSONALIDADE + "\n\n" + prompt
+
+    payload = {
+        "contents": [{"parts": [{"text": contexto_textual}]}]
+    }
+
+    try:
+        print("LLM: Gerando tweet diário...")
+        r = requests.post(URL, headers=HEADERS, json=payload, timeout=(5, 25))
+        r.raise_for_status()
+        data = r.json()
+        resposta = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+        print("LLM: Tweet pronto")
+        return resposta
+    except requests.exceptions.RequestException as e:
+        print(f"[ERRO] {str(e)}")
+        return "miau miau (não consegui pensar em nada hoje)"
