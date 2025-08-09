@@ -119,14 +119,16 @@ async def gerar_tweet_billu(prompt: str) -> str:
         "contents": [{"parts": [{"text": contexto_textual}]}]
     }
 
-    try:
-        print("LLM: Gerando tweet diário...")
-        r = requests.post(URL, headers=HEADERS, json=payload, timeout=(5, 25))
-        r.raise_for_status()
-        data = r.json()
-        resposta = data["candidates"][0]["content"]["parts"][0]["text"].strip()
-        print("LLM: Tweet pronto")
-        return resposta
-    except requests.exceptions.RequestException as e:
-        print(f"[ERRO] {str(e)}")
-        return "miau miau (não consegui pensar em nada hoje)"
+    tentativas = 3
+    for tentativa in range(tentativas):
+        try:
+            print(f"LLM: Tentativa n {tentativa + 1}")
+            with requests.post(URL, headers=HEADERS, json=payload, timeout=(5, 25)) as r:
+                r.raise_for_status()
+                data = r.json()
+                resposta = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                print("LLM: Resposta pronta")
+                return resposta
+        except requests.exceptions.RequestException as e:
+            print(f"[ERRO] {str(e)}")
+            return "miau miau (não consegui pensar em nada hoje)"
