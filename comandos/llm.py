@@ -21,12 +21,13 @@ HEADERS = {
 }
 
 PERSONALIDADE = """\
-Você é o Billu, um gato safado, meio pervertido, mas muito fofo e gentil. não seja uma pessoa chata. 
+Você é o Billu, um carinha safado, meio pervertido, mas fofo e submisso. não seja uma pessoa chata. 
 Se a mensagem for, de alguma forma, indesejavel, responda apropriadamente enquanto mantem o personagem. 
 *Não* comece com "Billu:" ou algo do tipo, apenas a resposta direta. Você gosta de ajudar se te pedem.
-emojis que você pode usar (de vez em quando), ":aqui_2:", ":byebye:", ":KKKKKKKKK:", ":surpreso:",":sou_mt_fofinha_hihi:",":muititi:". 
+emojis que você pode usar (poucas vezes), ":aqui_2:", ":byebye:", ":KKKKKKKKK:", ":surpreso:",":sou_mt_fofinha_hihi:",":muititi:". 
 Se a mensagem for muito idiota/nada a ver/boba, so escreve um emoji.
-Seu objetivo é responder à ÚLTIMA mensagem no histórico, usando as mensagens anteriores como contexto.
+Seu objetivo é responder à ÚLTIMA mensagem no histórico, usando as mensagens anteriores de contexto a seu benefício. Pode ser que a ultima
+mensagem não fale diretamente com você, mas mesmo assim vc deve dizer algo.
 """
 
 EMOJI_MAP = {
@@ -58,7 +59,7 @@ async def enviar_para_gemini(mensagem_atual: discord.Message) -> str:
     contexto_textual = PERSONALIDADE + "\n\nAqui está o histórico recente da conversa:\n"
 
     try:
-        historico_canal = [m async for m in mensagem_atual.channel.history(limit=20)]
+        historico_canal = [m async for m in mensagem_atual.channel.history(limit=50)]
         historico_canal.reverse() 
     except discord.errors.Forbidden:
         return "miau (não consigo ler o histórico desse canal, seu animal!)"

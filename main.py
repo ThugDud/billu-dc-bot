@@ -109,7 +109,7 @@ class MyBot(discord.Client):
 
         atividade = discord.Activity(
             type=discord.ActivityType.listening,
-            name="Agua de beber"
+            name="O Pirata - Ave Sangria"
         )
         await self.change_presence(
             status=discord.Status.idle,
