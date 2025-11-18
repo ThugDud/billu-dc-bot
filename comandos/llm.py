@@ -14,7 +14,7 @@ API_KEY = os.getenv("GEMINI_API_KEY")
 if not API_KEY:
     raise RuntimeError("[ERRO] Defina GEMINI_API_KEY no .env ou variável de ambiente.")
 
-URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
+URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent"
 HEADERS = {
     "Content-Type": "application/json",
     "X-goog-api-key": API_KEY
