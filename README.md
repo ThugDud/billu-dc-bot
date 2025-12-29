@@ -4,7 +4,7 @@ Um bot de Discord com alma de gato debochado, sarcástico, e cheio de personalid
 
 ---
 
-## ⚙️ Requisitos
+### 1. ⚙️ Requisitos
 
 - Python 3.11 ou superior (idealmente)
 - Discord bot token
@@ -13,15 +13,6 @@ Um bot de Discord com alma de gato debochado, sarcástico, e cheio de personalid
 - Sistema Operacional: **Windows ou Linux**
 
 ---
-
-## 🧠 Instalação e Execução
-
-### 1. Clone o repositório
-
-```bash
-git clone https://github.com/TeuUser/billu-dc-bot.git
-cd billu-dc-bot
-```
 
 ### 2. Crie o `.env`
 
